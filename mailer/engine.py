@@ -1,22 +1,24 @@
 import time
-import smtplib
 import logging
 
 from lockfile import FileLock, AlreadyLocked, LockTimeout
-from socket import error as socket_error
 
 from django.conf import settings
-from django.core.mail import send_mail as core_send_mail
 try:
     # Django 1.2
     from django.core.mail import get_connection
 except ImportError:
     # ImportError: cannot import name get_connection
     from django.core.mail import SMTPConnection
-    get_connection = lambda backend=None, fail_silently=False, **kwds: SMTPConnection(fail_silently=fail_silently)
-from django.db import transaction
 
-from mailer.models import Message, DontSendEntry, MessageLog
+    def get_connection(backend=None, fail_silently=False, **kwargs):
+        return SMTPConnection(fail_silently=fail_silently)
+try:
+    from django.db.transaction import atomic
+except ImportError:  # Django 1.4
+    from django.db.transaction import commit_on_success as atomic
+
+from mailer.models import Message, MessageLog
 
 
 # when queue is empty, how long to wait (in seconds) before checking again
@@ -27,7 +29,11 @@ EMPTY_QUEUE_SLEEP = getattr(settings, "MAILER_EMPTY_QUEUE_SLEEP", 30)
 LOCK_WAIT_TIMEOUT = getattr(settings, "MAILER_LOCK_WAIT_TIMEOUT", -1)
 
 # The actual backend to use for sending, defaulting to the Django default.
-EMAIL_BACKEND = getattr(settings, "MAILER_EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_BACKEND = getattr(
+    settings,
+    "MAILER_EMAIL_BACKEND",
+    "django.core.mail.backends.smtp.EmailBackend",
+)
 
 
 def prioritize():
@@ -38,21 +44,25 @@ def prioritize():
     while True:
         try:
             yield Message.objects.non_deferred().order_by(
-                    "priority", "when_added")[0]
+                "priority",
+                "when_added",
+            )[0]
         except IndexError:
             # the [0] ref was out of range, so we're done with messages
             break
 
-@transaction.commit_on_success
+
+@atomic
 def mark_as_sent(message):
     """
     Mark the given message as sent in the log and delete the original item.
     """
 
-    MessageLog.objects.log(message, 1) # @@@ avoid using literal result code
+    MessageLog.objects.log(message, 1)  # @@@ avoid using literal result code
     message.delete()
 
-@transaction.commit_on_success
+
+@atomic
 def mark_as_deferred(message, err=None):
     """
     Mark the given message as deferred in the log and adjust the mail item
@@ -61,7 +71,9 @@ def mark_as_deferred(message, err=None):
 
     message.defer()
     logging.info("message deferred due to failure: %s" % err)
-    MessageLog.objects.log(message, 3, log_message=str(err)) # @@@ avoid using literal result code
+    # @@@ avoid using literal result code
+    MessageLog.objects.log(message, 3, log_message=str(err))
+
 
 def send_all():
     """
@@ -83,7 +95,6 @@ def send_all():
 
     start_time = time.time()
 
-    dont_send = 0
     deferred = 0
     sent = 0
 
@@ -97,7 +108,11 @@ def send_all():
                     # already be open() so it sees new_conn_created as False
                     # and does not try and close the connection anyway.
                     connection.open()
-                logging.info("sending message '%s' to %s" % (message.subject.encode("utf-8"), u", ".join(message.to_addresses).encode("utf-8")))
+                logging.info(
+                    "sending message '%s' to %s",
+                    message.subject.encode("utf-8"),
+                    u", ".join(message.to_addresses).encode("utf-8")
+                )
                 email = message.email
                 if not email:
                     # We likely had a decoding problem when pulling it back out
@@ -106,13 +121,19 @@ def send_all():
                     deferred += 1
                     continue
                 email.connection = connection
+                if not hasattr(email, 'reply_to'):
+                    # Compatability fix for EmailMessage objects
+                    # pickled when running < Django 1.8 and then
+                    # unpickled under Django 1.8
+                    email.reply_to = []
                 email.send()
                 mark_as_sent(message)
                 sent += 1
             except Exception, err:
                 mark_as_deferred(message, err)
                 deferred += 1
-                # Get new connection, it case the connection itself has an error.
+                # Get new connection, it case the connection itself has an
+                # error.
                 connection = None
     finally:
         logging.debug("releasing lock...")
@@ -123,6 +144,7 @@ def send_all():
     logging.info("%s sent; %s deferred;" % (sent, deferred))
     logging.info("done in %.2f seconds" % (time.time() - start_time))
 
+
 def send_loop():
     """
     Loop indefinitely, checking queue at intervals of EMPTY_QUEUE_SLEEP and
@@ -131,6 +153,9 @@ def send_loop():
 
     while True:
         while not Message.objects.all():
-            logging.debug("sleeping for %s seconds before checking queue again" % EMPTY_QUEUE_SLEEP)
+            logging.debug(
+                "sleeping for %s seconds before checking queue again",
+                EMPTY_QUEUE_SLEEP,
+            )
             time.sleep(EMPTY_QUEUE_SLEEP)
         send_all()

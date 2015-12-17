@@ -121,6 +121,11 @@ def send_all():
                     deferred += 1
                     continue
                 email.connection = connection
+                if not hasattr(email, 'reply_to'):
+                    # Compatability fix for EmailMessage objects
+                    # pickled when running < Django 1.8 and then
+                    # unpickled under Django 1.8
+                    email.reply_to = []
                 email.send()
                 mark_as_sent(message)
                 sent += 1

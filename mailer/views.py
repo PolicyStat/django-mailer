@@ -10,6 +10,7 @@ from mailer.models import Message, MessageLog
 
 default_cutoff = timedelta(days=7)
 
+
 # check one of the permissions dealing with the mailer app
 @permission_required("mailer.add_message")
 def report(request, cutoff=default_cutoff):

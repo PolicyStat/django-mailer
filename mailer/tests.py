@@ -58,3 +58,11 @@ class MailerTestCase(TestCase):
     def test_view_smoke_test(self):
         r = self.client.get(reverse('mailer_report'))
         self.assertEqual(r.status_code, 302)
+
+
+class RetryDeferredCommandTestCase(TestCase):
+    def test_command_can_run(self):
+        args = []
+        opts = {}
+
+        management.call_command('retry_deferred', *args, **opts)

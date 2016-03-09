@@ -14,7 +14,10 @@ class Command(NoArgsCommand):
             '1': logging.INFO,
             '2': logging.DEBUG,
         }
-        level = log_levels[options['verbosity']]
+        # in case of 1.4 compatibility, where a string would be passed in
+
+        verbosity = str(options['verbosity'])
+        level = log_levels[verbosity]
         logging.basicConfig(level=level, format="%(message)s")
         count = Message.objects.retry_deferred() # @@@ new_priority not yet supported
         logging.info("%s message(s) retried" % count)

@@ -72,7 +72,9 @@ class Message(models.Model):
     objects = MessageManager()
 
     class Meta:
-        index_together = ["priority", "when_added"]
+        index_together = [
+            ["priority", "when_added"],
+        ]
 
     def defer(self):
         self.priority = "4"

@@ -2,7 +2,6 @@ language: python
 python:
   - "2.7"
 env:
-  - TOX_ENV=py27-django1.4
   - TOX_ENV=py27-django1.8
 install:
   - pip install tox

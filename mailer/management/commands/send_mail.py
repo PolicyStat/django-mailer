@@ -1,7 +1,7 @@
 import logging
 
 from django.conf import settings
-from django.core.management.base import NoArgsCommand
+from django.core.management.base import BaseCommand
 
 from mailer.engine import send_all
 
@@ -10,10 +10,10 @@ from mailer.engine import send_all
 PAUSE_SEND = getattr(settings, "MAILER_PAUSE_SEND", False)
 
 
-class Command(NoArgsCommand):
+class Command(BaseCommand):
     help = "Do one pass through the mail queue, attempting to send all mail."
 
-    def handle_noargs(self, **options):
+    def handle(self, **options):
         log_levels = {
             0: logging.WARNING,
             1: logging.INFO,

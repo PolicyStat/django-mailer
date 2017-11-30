@@ -1,14 +1,14 @@
 import logging
 
-from django.core.management.base import NoArgsCommand
+from django.core.management.base import BaseCommand
 
 from mailer.models import Message
 
 
-class Command(NoArgsCommand):
+class Command(BaseCommand):
     help = "Attempt to resend any deferred mail."
-    
-    def handle_noargs(self, **options):
+
+    def handle(self, **options):
         log_levels = {
             '0': logging.WARNING,
             '1': logging.INFO,

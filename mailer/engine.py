@@ -1,7 +1,7 @@
 import time
 import logging
 
-from lockfile import FileLock, AlreadyLocked, LockTimeout
+from .lockfile import FileLock, AlreadyLocked, LockTimeout
 
 from django.conf import settings
 try:

@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
-from types import StringTypes
+
+import six
 
 from django.contrib.auth.decorators import permission_required
 from django.db.models import Count, Max, Min
@@ -64,7 +65,7 @@ def report(request, cutoff=default_cutoff):
         can perform more precise percentile lookups.
         """
         def __getitem__(self, val):
-            if isinstance(val, StringTypes):
+            if isinstance(val, six.string_types):
                 val = val.replace("_", ".")
             rank = float(val) / 100 * len(date_diffs) + 0.5
             return date_diffs[int(rank)]

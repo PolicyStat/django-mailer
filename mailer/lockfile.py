@@ -53,11 +53,11 @@ from __future__ import division
 import sys
 import socket
 import os
-import thread
 import threading
 import time
 import errno
-import urllib
+
+import six
 
 # Work with PEP8 and non-PEP8 versions of threading module.
 if not hasattr(threading, "current_thread"):
@@ -174,7 +174,7 @@ class LockBase:
         self.pid = os.getpid()
         if threaded:
             name = threading.current_thread().get_name()
-            tname = "%s-" % urllib.quote(name, safe="")
+            tname = "%s-" % six.moves.urllib.parse.quote(name, safe="")
         else:
             tname = ""
         dirname = os.path.dirname(self.lock_file)
@@ -306,7 +306,7 @@ class MkdirFileLock(LockBase):
         """
         LockBase.__init__(self, path, threaded)
         if threaded:
-            tname = "%x-" % thread.get_ident()
+            tname = "%x-" % six.moves._thread.get_ident()
         else:
             tname = ""
         # Lock file itself is a directory.  Place the unique file name into

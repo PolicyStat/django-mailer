@@ -29,15 +29,15 @@ PRIORITY_MAPPING = {
 
 def send_mail(subject, message, from_email, recipient_list, priority="medium",
               fail_silently=False, auth_user=None, auth_password=None):
-    from django.utils.encoding import force_unicode
+    from django.utils.encoding import force_text
     from mailer.models import make_message
-    
+
     priority = PRIORITY_MAPPING[priority]
-    
+
     # need to do this in case subject used lazy version of ugettext
-    subject = force_unicode(subject)
-    message = force_unicode(message)
-    
+    subject = force_text(subject)
+    message = force_text(message)
+
     make_message(subject=subject,
                  body=message,
                  from_email=from_email,
@@ -52,16 +52,16 @@ def send_html_mail(subject, message, message_html, from_email, recipient_list,
     """
     Function to queue HTML e-mails
     """
-    from django.utils.encoding import force_unicode
+    from django.utils.encoding import force_text
     from django.core.mail import EmailMultiAlternatives
     from mailer.models import make_message
 
     priority = PRIORITY_MAPPING[priority]
 
     # need to do this in case subject used lazy version of ugettext
-    subject = force_unicode(subject)
-    message = force_unicode(message)
-    
+    subject = force_text(subject)
+    message = force_text(message)
+
     msg = make_message(subject=subject,
                        body=message,
                        from_email=from_email,
@@ -96,9 +96,9 @@ def mail_admins(
         priority="medium",
 ):
     from django.conf import settings
-    from django.utils.encoding import force_unicode
-    
-    return send_mail(settings.EMAIL_SUBJECT_PREFIX + force_unicode(subject),
+    from django.utils.encoding import force_text
+
+    return send_mail(settings.EMAIL_SUBJECT_PREFIX + force_text(subject),
                      message,
                      settings.SERVER_EMAIL,
                      [a[1] for a in settings.ADMINS])
@@ -112,9 +112,9 @@ def mail_managers(
         priority="medium",
 ):
     from django.conf import settings
-    from django.utils.encoding import force_unicode
-    
-    return send_mail(settings.EMAIL_SUBJECT_PREFIX + force_unicode(subject),
+    from django.utils.encoding import force_text
+
+    return send_mail(settings.EMAIL_SUBJECT_PREFIX + force_text(subject),
                      message,
                      settings.SERVER_EMAIL,
                      [a[1] for a in settings.MANAGERS])

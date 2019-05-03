@@ -6,6 +6,7 @@ from datetime import datetime
 
 from django.core.mail import EmailMessage
 from django.db import models
+from django.utils.encoding import force_text, smart_bytes
 
 
 PRIORITIES = (
@@ -43,21 +44,13 @@ class MessageManager(models.Manager):
 def email_to_db(email):
     # pickle.dumps returns essentially binary data which we need to encode
     # to store in a unicode field.
-    return base64.encodestring(pickle.dumps(email))
+    return force_text(base64.encodestring(pickle.dumps(email)))
 
 
 def db_to_email(data):
-    if data == u"":
+    if not data:
         return None
-    else:
-        try:
-            return pickle.loads(base64.decodestring(data))
-        except Exception:
-            try:
-                # previous method was to just do pickle.dumps(val)
-                return pickle.loads(data.encode("ascii"))
-            except Exception:
-                return None
+    return pickle.loads(base64.decodestring(smart_bytes(data)))
 
 
 class Message(models.Model):

@@ -94,9 +94,15 @@ class Message(models.Model):
     def _set_email(self, val):
         self.message_data = email_to_db(val)
 
-    email = property(_get_email, _set_email, doc=
-                     """EmailMessage object. If this is mutated, you will need to
-set the attribute again to cause the underlying serialised data to be updated.""")
+    email = property(
+        _get_email,
+        _set_email,
+        doc=(
+            'EmailMessage object. If this is mutated, you will need to set '
+            'the attribute again to cause the underlying serialised data to '
+            'be updated.'
+        ),
+    )
 
     @property
     def to_addresses(self):
@@ -121,7 +127,11 @@ def filter_recipient_list(lst):
     retval = []
     for e in lst:
         if DontSendEntry.objects.has_address(e):
-            logging.info("skipping email to %s as on don't send list " % e.encode("utf-8"))
+            logging.info(
+                "skipping email to %s as on don't send list " % e.encode(
+                    "utf-8",
+                ),
+            )
         else:
             retval.append(e)
     return retval
@@ -140,8 +150,15 @@ def make_message(subject="", body="", from_email=None, to=None, bcc=None,
     """
     to = filter_recipient_list(to)
     bcc = filter_recipient_list(bcc)
-    core_msg = EmailMessage(subject=subject, body=body, from_email=from_email,
-                            to=to, bcc=bcc, attachments=attachments, headers=headers)
+    core_msg = EmailMessage(
+        subject=subject,
+        body=body,
+        from_email=from_email,
+        to=to,
+        bcc=bcc,
+        attachments=attachments,
+        headers=headers,
+    )
 
     db_msg = Message(priority=priority)
     db_msg.email = core_msg
@@ -195,12 +212,12 @@ class MessageLogManager(models.Manager):
         """
 
         return self.create(
-            message_data = message.message_data,
-            when_added = message.when_added,
-            priority = message.priority,
+            message_data=message.message_data,
+            when_added=message.when_added,
+            priority=message.priority,
             # @@@ other fields from Message
-            result = result_code,
-            log_message = log_message,
+            result=result_code,
+            log_message=log_message,
         )
 
 

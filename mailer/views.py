@@ -35,7 +35,12 @@ def report(request, cutoff=default_cutoff):
     log_success_stats = log_qs.filter(result="1").aggregate(
             total=Count("id"), latest=Max("when_added"))
 
-    dates = log_qs.filter(result="1").values_list("when_added", "when_attempted")
+    dates = log_qs.filter(
+        result="1"
+    ).values_list(
+        "when_added",
+        "when_attempted",
+    )
     date_diffs = []
     for date in dates:
         date_diffs.append(date[1] - date[0])
@@ -95,6 +100,7 @@ def report(request, cutoff=default_cutoff):
         "cutoff_date": cutoff_date,
         "current_time": current_time,
     }
-    return render_to_response("mailer/report.html",
-            RequestContext(request, context))
-
+    return render_to_response(
+        "mailer/report.html",
+        RequestContext(request, context),
+    )

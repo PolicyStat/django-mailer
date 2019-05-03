@@ -1,9 +1,11 @@
 language: python
+dist: xenial
 python:
-  - "2.7"
+  - "3.7"
 env:
-  - TOX_ENV=py27-django1.8
   - TOX_ENV=py27-django1.11
+  - TOX_ENV=py37-django1.11
+  - TOX_ENV=py37-django2.2
 install:
   - pip install tox
 notifications:

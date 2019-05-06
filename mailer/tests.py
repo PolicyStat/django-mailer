@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 
 from django.core import management
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test import TestCase
 
 from mailer import send_mail
